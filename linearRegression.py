@@ -5,7 +5,7 @@ Created on Mon Feb 15 03:03:21 2021
 @author: VolkanKarakuş
 """
 #%% LINEAR REGRESSION
-
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -72,7 +72,10 @@ b0=linear_reg.predict([[0]]) # ya da b0=linear_reg.intercept_
 b1=linear_reg.coef_ # b1: egim,slope
 # b1: array([[1138.34819698]])
 
+#visualize line
+array=np.array([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]).reshape(-1,1) # deneyim
+plt.scatter(x,y)
+plt.show()
 
-
-
-
+y_head=linear_reg.predict(array)  #maas 
+plt.plot(array,y_head,color='red')
