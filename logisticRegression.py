@@ -130,12 +130,107 @@ def sigmoid(z):
               
     return y_head
 
-#sigmoid(0)
+#print(sigmoid(0))
 
-
-
-
+#%% forward-backward propagation
+def forward_backward_propagation(w,b,x_train,y_train):
+    'forward propagation'
+    z = np.dot(w.T,x_train)+b # transpose alinmasi carpilabilsin diye
+    y_head = sigmoid(z)
+    loss = -y_train*np.log(y_head)-(1-y_train)*np.log(1-y_head)
+    cost=(np.sum(loss))/x_train.shape[1]  # x_train.shape[1] is for scaling(normalization)
     
+    'backward propagation'
+    derivative_weight=(np.dot(x_train,((y_head-y_train).T)))/x_train.shape[1]
+    derivative_bias=np.sum(y_head-y_train)/x_train.shape[1]
+    gradients={'derivative_weight': derivative_weight,'derivative_bias': derivative_bias}
+    
+    return cost,gradients
+
+#%% Updating(learning) parameters
+def update(w, b, x_train, y_train, learning_rate,number_of_iterarion): # learning rate, how fast it learned
+    cost_list = []
+    cost_list2 = []
+    index = []
+    # updating(learning) parameters is number_of_iterarion times
+    for i in range(number_of_iterarion):
+        # make forward and backward propagation and find cost and gradients
+        cost,gradients = forward_backward_propagation(w,b,x_train,y_train)
+        cost_list.append(cost)
+        # lets update
+        w = w - learning_rate * gradients["derivative_weight"]
+        b = b - learning_rate * gradients["derivative_bias"]
+        
+        if i % 10 == 0: #Let's show the cost value every 10 steps.for visuals only
+            cost_list2.append(cost)
+            index.append(i)
+            print ("Cost after iteration %i: %f" %(i, cost))
+            
+    # we update(learn) parameters weights and bias
+    parameters = {"weight": w,"bias": b}
+    plt.plot(index,cost_list2)
+    plt.xticks(index,rotation='vertical')
+    plt.xlabel("Number of Iterarion")
+    plt.ylabel("Cost")
+    plt.show()
+    return parameters, gradients, cost_list
+#parameters, gradients, cost_list = update(w, b, x_train, y_train, learning_rate = 0.009,number_of_iterarion = 200)
  
+#%% 
+# prediction
+def predict(w,b,x_test): # data to predict is x_test, not x_train !
+    # x_test is a input for forward propagation
+    z = sigmoid(np.dot(w.T,x_test)+b)
+    Y_prediction = np.zeros((1,x_test.shape[1])) # create a matrix of size y_test. x_test.shape[1] is 114.
+    #The size of y_test is actually (114,1). Since the vector comparison is made (1.114) it does not cause any problems.
 
+    # if z is bigger than 0.5, our prediction is sign one (y_head=1),
+    # if z is smaller than 0.5, our prediction is sign zero (y_head=0),
+    for i in range(z.shape[1]):
+        if z[0,i]<= 0.5:
+            Y_prediction[0,i] = 0
+        else:
+            Y_prediction[0,i] = 1
 
+    return Y_prediction
+# predict(parameters["weight"],parameters["bias"],x_test)
+
+#%% logistic regression
+
+def logistic_regression(x_train, y_train, x_test, y_test, learning_rate ,  num_iterations):
+    # initialize
+    dimension =  x_train.shape[0]  # that is 4096
+    w,b = initialize_w_and_b(dimension)
+    # do not change learning rate
+    parameters, gradients, cost_list = update(w, b, x_train, y_train, learning_rate,num_iterations)
+    
+    y_prediction_test = predict(parameters["weight"],parameters["bias"],x_test)
+
+    # Print test Errors
+    print("test accuracy: {} %".format(100 - np.mean(np.abs(y_prediction_test - y_test)) * 100))
+    
+logistic_regression(x_train, y_train, x_test, y_test,learning_rate = 1, num_iterations = 3)
+# Cost after iteration 0: 0.692977
+# test accuracy: 78.0701754385965 %
+# The graph turned out to be blank because I said store every 10 values ​​while plotting.
+
+logistic_regression(x_train, y_train, x_test, y_test,learning_rate = 1, num_iterations = 20)
+# Cost after iteration 0: 0.692977
+# Cost after iteration 10: 0.499667
+# test accuracy: 94.73684210526316 %
+
+logistic_regression(x_train, y_train, x_test, y_test,learning_rate = 1, num_iterations = 500)
+#Approaching zero at iteration 300. So let's do iteration = 300.
+#%%
+logistic_regression(x_train, y_train, x_test, y_test,learning_rate = 3, num_iterations = 300)
+# learning_rate and num_iterations are hyperparameter. We can tune it. 3 and 300 are suitable values for it.
+
+#%% sklearn with logistic regression 
+from sklearn.linear_model import LinearRegression
+lr=LinearRegression()
+
+lr.fit(x_train.T,y_train.T) # x_train.shape : (30,455) -> 30 feature, 455 sample
+# instead, I increase the number of features by transposing.
+
+print('test accuracy {}'.format(lr.score(x_test.T,y_test.T))) # score: predict and tell directly how many percent you got right
+# test accuracy 0.7271016126223551
